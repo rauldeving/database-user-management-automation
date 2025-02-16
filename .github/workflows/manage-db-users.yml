@@ -33,11 +33,12 @@ jobs:
 
 #OPTION 2
 #this is a role without policies, with the ability to assume another role 
+
       - name: Configure AWS Credentials using OpenID Connect
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
-          aws-region: ${{ secrets.aws-region }}
+          aws-region: ${{ eu-central-1 }}
           role-session-name: "UserManagementSession"
 
       - name: Assume Role in ${{ github.event.inputs.enviroment }}
@@ -52,9 +53,8 @@ jobs:
       - name: Install MySQL & PostgreSQL clients
         run: |
           sudo apt-get update
-          sudo apt-get install -y mysql-client postgresql-client
+          sudo apt-get install -y postgresql-client
 
       - name: Run database user management script
         run: |
           python manage_users.py ${{ github.event.inputs.enviroment }}
-        env: ${{ secrets.aws-region }}

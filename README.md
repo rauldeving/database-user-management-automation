@@ -6,7 +6,7 @@ This repository provides an example of how to automate the creation and deletion
 
  - Automates the creation and deletion of users in AWS databases.
 
- - Supports MySQL and PostgreSQL.
+ - Supports PostgreSQL.
 
  - Uses GitHub Actions to execute scripts on demand.
 
