@@ -45,7 +45,7 @@ for db in db_secrets["databases"]:
     db_host = db["host"]
     db_username = db["username"]
     db_password = db["password"]
-    db_name = db.get("database", "postgres")  # If DB not defined, it will use postgres
+    db_name = db.get("database", "postgres")  # If DB not defined, it will use postgres - the only one supported up to this point
 
     print(f"Connecting to PostgreSQL database: {db_host}...")
 
