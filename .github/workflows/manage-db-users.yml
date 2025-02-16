@@ -50,6 +50,19 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r .Credentials.SecretAccessKey)" >> $GITHUB_ENV
           echo "AWS_SESSION_TOKEN=$(echo $CREDS | jq -r .Credentials.SessionToken)" >> $GITHUB_ENV 
 
+      - name: Set Up SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: $ {{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Start SSH tunnel to bastion host
+        run: |
+          ?????
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt 
+
       - name: Install MySQL & PostgreSQL clients
         run: |
           sudo apt-get update
