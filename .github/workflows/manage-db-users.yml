@@ -56,8 +56,4 @@ jobs:
 
       - name: Run database user management script
         run: |
-          python manage_users.py
-        env:
-          DB_HOSTS: "${{ vars.DATABASE_HOST }}"
-          DB_USERNAME: ${{ secrets.DB_ADMIN_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_ADMIN_PASSWORD }}
+          python manage_users.py ${{ github.event.inputs.enviroment }}
