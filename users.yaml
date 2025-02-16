@@ -1,3 +1,4 @@
 users:
   - name: "user_1"
-  - password: "user_1_password"
+  - name: "user_2"
+  - name: "user_3"
