@@ -2,6 +2,14 @@
 
 This repository provides an example of how to automate the creation and deletion of database users in AWS-hosted databases using GitHub Actions. The workflow connects to multiple databases, executes SQL commands, and manages users efficiently.
 
+# Ways to implement this feature
+
+ - Launch as an ECS Task (it will close when the job is done) - **this is the method i will use**
+ 
+ - AWS LAMBDA Function
+
+ - Github Actions pipeline (if your database requires an ssh tunnel, the pipeline must be modified)
+
 # Features
 
  - Automates the creation and deletion of users in AWS databases.
