@@ -6,7 +6,7 @@ This repository provides an example of how to automate the creation and deletion
 
  - Launch as an ECS Task (it will close when the job is done) - **this is the method i will use**
  
- - AWS LAMBDA Function
+ - AWS LAMBDA Function - python script must be modified
 
  - Github Actions pipeline (if your database requires an ssh tunnel, the pipeline must be modified)
 

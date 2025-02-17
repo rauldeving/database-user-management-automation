@@ -57,7 +57,7 @@ jobs:
 
       - name: Start SSH tunnel to bastion host
         run: |
-          ?????
+          ## ##
 
       - name: Install dependencies
         run: |
