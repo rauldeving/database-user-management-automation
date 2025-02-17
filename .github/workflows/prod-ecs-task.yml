@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with: 
+          ref: teest  #this should be replaced with "main"
  
 #Configure AWS credentials: 2 options:
 
