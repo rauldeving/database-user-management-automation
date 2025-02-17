@@ -1,0 +1,88 @@
+name: Manage Database Users
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:  
+        description: "Choose the enviroment"
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - staging  
+   
+jobs:
+
+  manage-db-users:
+    name: Deploy Databse User Management on ${{ github.event.inputs.environment}}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+ 
+#Configure AWS credentials: 2 options:
+
+#OPTION 1:
+
+      # - name: Configure AWS credentials 
+      #   uses: aws-actions/configure-aws-credentials@v2
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ secrets.aws-region }} 
+
+#OPTION 2
+#this is a role without policies, with the ability to assume another role 
+
+      - name: Configure AWS Credentials using OpenID Connect
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ eu-central-1 }}
+          role-session-name: "UserManagementSession"
+
+      - name: Assume Role in ${{ github.event.inputs.enviroment }}
+        id: assume_role
+        run: |
+          CREDS=$(aws sts assume-role --role-arn ${{ vars.AWS_TARGET_ROLE }} --role-session-name "GithubSession")
+
+          echo "AWS_ACCESS_KEY_ID=$(echo $CREDS | jq -r .Credentials.AccessKeyId)" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$(echo $CREDS | jq -r .Credentials.SecretAccessKey)" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$(echo $CREDS | jq -r .Credentials.SessionToken)" >> $GITHUB_ENV 
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }} # I use enviroment variables (feature of github), so when I pick development or staging, the pipeline will know what value to get
+        run: |
+          docker built -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Fill the new image ID in the Amazon ECS task definition
+        id: task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:  
+          task-definition: ${{ vars.TASK_DEFINITION }}
+          container-name: ${{ vars.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Install AWS CLI
+        id: install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+        with: 
+          version: 2
+          verbose: false
+          arch: amd64
+      
+      - name: Run Database User Management
+        run: 'aws ecs run-task --cluster ${{ vars.ECS_CLUSTER }} --task-definition ${{ vars.TASK_DEFINITION }} --network-configuration ''{"awsvpcConfiguration": { "assignPublicIp":"DISABLED","securityGroups: ["${{ vars.SECURITY_GROUPS }}"], "subnets: ["${{ vars.SUBNETS }}"]}}'' --launch-type FARGATE --no-cli-pager'
