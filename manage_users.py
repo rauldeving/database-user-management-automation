@@ -12,7 +12,7 @@ if len(sys.argv) < 2:
 environment = sys.argv[1].lower()
 print(f"Running user management for: {environment.upper()}")
 
-# ARN-urile secretelor sunt definite în Task Definition (ca environment variables)
+
 db_secret_arn = os.getenv("DB_SECRET_ARN")
 user_secret_arn = os.getenv("USER_SECRET_ARN")
 
@@ -22,7 +22,7 @@ if not db_secret_arn or not user_secret_arn:
 
 aws_region = "eu-central-1"
 
-# Init boto3 pentru AWS Secrets Manager
+
 client = boto3.client("secretsmanager", region_name=aws_region)
 
 def get_secret(secret_arn):
@@ -31,13 +31,13 @@ def get_secret(secret_arn):
     return json.loads(response["SecretString"])
 
 try:
-    db_secrets = get_secret(db_secret_arn)   # Secret cu detalii despre baze de date
-    user_secrets = get_secret(user_secret_arn)  # Secret cu parolele userilor
+    db_secrets = get_secret(db_secret_arn)  
+    user_secrets = get_secret(user_secret_arn) 
 except Exception as e:
     print(f"Error retrieving secrets from AWS: {e}")
     sys.exit(1)
 
-# Citim fișierul users.yaml
+
 try:
     with open("users.yaml", "r") as f:
         users = yaml.safe_load(f)
@@ -45,12 +45,12 @@ except Exception as e:
     print(f"Error reading users.yaml: {e}")
     sys.exit(1)
 
-# Funcție pentru a verifica dacă un user există deja în baza de date
+
 def user_exists(cursor, user_name):
     cursor.execute("SELECT 1 FROM pg_roles WHERE rolname = %s;", (user_name,))
     return cursor.fetchone() is not None
 
-# Iterăm prin fiecare bază de date
+
 for db in db_secrets["databases"]:
     db_host = db["host"]
     db_username = db["username"]
@@ -77,11 +77,10 @@ for db in db_secrets["databases"]:
 
             print(f"Creating PostgreSQL user: {user_name} on {db_host}")
 
-            # Creăm user-ul și îi oferim acces la conectare
+          
             cursor.execute(f"CREATE USER {user_name} WITH PASSWORD '{user_password}';")
             cursor.execute(f"GRANT CONNECT ON DATABASE {db_name} TO {user_name};")
 
-            # Atribuim rolurile corespunzătoare în funcție de environment
             if environment == "production":
                 cursor.execute(f"GRANT pg_read_all_data TO {user_name};")
                 print(f"Granted pg_read_all_data to {user_name} on {db_host}")
